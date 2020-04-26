@@ -308,6 +308,11 @@ def main():
     if not os.path.exists(args.result_dir):
         os.system('mkdir -p %s' % args.result_dir)
 
+    save_file = args.result_dir + "/" + name + ".json"
+    if os.path.exists(save_file):
+        print('case processed')
+        exit()
+
     for epoch in range(1, args.n_epoch + 1):
         for param_group in optimizer.param_groups:
             print(epoch, param_group['lr'])
@@ -342,7 +347,6 @@ def main():
         "test_loss" : test_losses,
         "test_acc" : test_accs
     }
-    save_file = args.result_dir + "/" + name + ".json"
     json.dump(save_data, open(save_file, 'w'))
 
 if __name__ == '__main__':
