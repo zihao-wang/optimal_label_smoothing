@@ -50,8 +50,24 @@ if (args.graph == "grid"):
     plt.savefig('{}/grid_search/{}_{}.png'.format(plot_dir, args.graph, args.y), bbox_inches='tight')
     plt.clf()
 
+if (args.graph == "grid-max"):
+    epoch = 100
+
+    for a in a_grid:
+        accs = []
+        for p in p_grid:
+            data = get_data(p, a)
+            accs.append(max(data[args.y]))
+        plt.plot(p_grid, accs, label="a={:.2f}".format(a))
+
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.xlabel("p", fontsize=12)
+    plt.ylabel("{}".format(args.y), fontsize=12)
+    plt.savefig('{}/grid_search/{}_{}.png'.format(plot_dir, args.graph, args.y), bbox_inches='tight')
+    plt.clf()
+
 if (args.graph == "fixed_a"):
-    a = 0.2
+    a = 0.3
     for p in p_grid:
         data = get_data(p, a)[args.y]
         plt.plot(np.arange(0, len(data), 1), data, label="p={:.2f}".format(p))
@@ -59,6 +75,47 @@ if (args.graph == "fixed_a"):
     plt.xlabel("epochs", fontsize=12)
     plt.ylabel("{}".format(args.y), fontsize=12)
     plt.savefig('{}/grid_search/{}_{}_{}.png'.format(plot_dir, args.graph, args.y, a))
+
+if (args.graph == "a_trend"):
+    last_ave = []
+    last_std = []
+    best_ave = []
+    best_std = []
+    for a in a_grid:
+        this_a_p_last = []
+        this_a_p_best = []
+        for p in p_grid:
+            data = get_data(p, a)[args.y]
+            this_a_p_last.append(data[-1])
+            this_a_p_best.append(max(data))
+        last_ave.append(np.mean(this_a_p_last))
+        last_std.append(np.std(this_a_p_last))
+
+        best_ave.append(np.mean(this_a_p_best))
+        best_std.append(np.std(this_a_p_best))
+
+    last_ave = np.asarray(last_ave) / 100
+    last_std = np.asarray(last_std) / 100 
+
+    best_ave = np.asarray(best_ave) / 100
+    best_std = np.asarray(best_std) / 100
+    a_grid = np.asarray(a_grid)
+
+    plt.loglog(a_grid-0.1, last_ave - 0.1, label='last value')
+    #plt.fill_between(a_grid, last_ave - last_std, last_ave + last_std, alpha=0.3)
+    plt.loglog(a_grid-0.1, best_ave - 0.1, label='best value')
+    #plt.fill_between(a_grid, best_ave - best_std, best_ave + best_std, alpha=0.3)
+
+    x = np.arange(91)/100
+    for f in range(11):
+        factor = f / 10
+        plt.loglog(x, (best_ave[-1] - 0.1) * x ** factor / 0.9 ** factor , ':' , label=r'$y=0.1 + k(x-0.1)^{%f}$' % factor)
+
+    plt.legend(fontsize=8)
+    plt.xlabel("a-0.1", fontsize=12)
+    plt.ylabel("{}-0.1".format(args.y), fontsize=12)
+
+    plt.savefig('{}/grid_search/{}_{}.png'.format(plot_dir, args.graph, args.y))
 
 if (args.graph == "heatmap"):
     epoch = 100
