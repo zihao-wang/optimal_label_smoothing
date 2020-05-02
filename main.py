@@ -8,7 +8,7 @@ from torch.autograd import Variable
 import torchvision.transforms as transforms
 from torchvision import datasets
 from data.mnist import MNIST
-from data.cifar import CIFAR10
+from data.cifar import CIFAR10, CIFAR100
 from model import CNN_basic, CNN_small, LSTMClassifier
 from loss import cal_loss
 from optimizer import LaProp
@@ -156,7 +156,7 @@ def main():
         help='how many subprocesses to use for data loading')
     parser.add_argument('--epoch_decay_start', type=int, default=80)
     parser.add_argument('--load_model', type=str, default="")
-
+    parser.add_argument('--model', type=str, default='default')
     parser.add_argument(
         '--batch_size',
         type=int,
@@ -269,6 +269,48 @@ def main():
             drop_last=True,
             shuffle=False)
 
+    if args.dataset == 'cifar100':
+        input_channel = 3
+        num_classes = 100
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+        train_dataset = CIFAR100(
+            root='./data/',
+            download=True,
+            train=True,
+            transform=transform_train,
+            noise_type=args.noise_type,
+            noise_rate=args.noise_rate)
+        test_dataset = CIFAR100(
+            root='./data/',
+            download=True,
+            train=False,
+            transform=transform_test,
+            noise_type=args.noise_type,
+            noise_rate=args.noise_rate)
+        print('loading dataset...')
+        train_loader = torch.utils.data.DataLoader(
+            dataset=train_dataset,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            drop_last=True,
+            shuffle=True)
+        test_loader = torch.utils.data.DataLoader(
+            dataset=test_dataset,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            drop_last=True,
+            shuffle=False)
+
     if args.dataset == 'imdb':
         num_classes = 2
         embedding_length = 300
@@ -286,13 +328,25 @@ def main():
         model = CNN_basic(num_classes=num_classes).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
     if args.dataset == 'cifar10':
-        # model = CNN_small(num_classes=num_classes).to(device)
-        # optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
-        model = resnet.ResNet18().to(device)
-        change_lr = lambda epoch: 0.1 if epoch >= 50 else 1.0
-        optimizer = LaProp(filter(lambda p: p.requires_grad, model.parameters()), lr=4e-4)
-        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=change_lr)
-        args.use_scheduler = True
+        if args.model == 'small':
+            model = CNN_small(num_classes=num_classes).to(device)
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+        else:
+            model = resnet.ResNet18(num_classes=num_classes).to(device)
+            change_lr = lambda epoch: 0.1 if epoch >= 50 else 1.0
+            optimizer = LaProp(filter(lambda p: p.requires_grad, model.parameters()), lr=4e-4)
+            scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=change_lr)
+            args.use_scheduler = True
+    if args.dataset == 'cifar100':
+        if args.model == 'small':
+            model = CNN_small(num_classes=num_classes).to(device)
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+        else:
+            model = resnet.ResNet18(num_classes=num_classes).to(device)
+            change_lr = lambda epoch: 0.1 if epoch >= 50 else 1.0
+            optimizer = LaProp(filter(lambda p: p.requires_grad, model.parameters()), lr=4e-4)
+            scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=change_lr)
+            args.use_scheduler = True
     if args.dataset == 'imdb':
         model = LSTMClassifier(args.batch_size, num_classes, hidden_size,
                                vocab_size, embedding_length, word_embeddings).to(device)

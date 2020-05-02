@@ -18,6 +18,10 @@ parser.add_argument(
 parser.add_argument(
         '--dataset', type=str, help='[mnist, cifar10]', default="mnist")
 
+parser.add_argument(
+        '--datadir', type=str, help='[something in results/grid_search]')
+
+
 args = parser.parse_args()
 
 def get_path(p, a):
@@ -29,8 +33,9 @@ def get_data(p, a):
     data = json.load(open(path, 'r'))
     return data
 
-data_dir = "../results/grid_search/{}".format(args.dataset)
-plot_dir = "plots"
+data_dir = "../results/grid_search/{}".format(args.datadir)
+plot_dir = "plots/{}".format(args.datadir)
+os.makedirs(os.path.join(plot_dir, 'grid_search'), exist_ok=True)
 p_grid = [0.05 * i for i in range(3, 21)]
 a_grid = [0.05 * i for i in range(3, 21)]
 
@@ -67,13 +72,14 @@ if (args.graph == "grid-max"):
     plt.clf()
 
 if (args.graph == "fixed_a"):
-    a = 0.3
+    a = 0.2
     for p in p_grid:
         data = get_data(p, a)[args.y]
         plt.plot(np.arange(0, len(data), 1), data, label="p={:.2f}".format(p))
     plt.legend()
     plt.xlabel("epochs", fontsize=12)
     plt.ylabel("{}".format(args.y), fontsize=12)
+    plt.title("fixed a = {}".format(a))
     plt.savefig('{}/grid_search/{}_{}_{}.png'.format(plot_dir, args.graph, args.y, a))
 
 if (args.graph == "a_trend"):
