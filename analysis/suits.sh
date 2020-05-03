@@ -1,4 +1,4 @@
-datadir=cifar10-small
+datadir=cifar10
 dataset=cifar10
 
 
@@ -11,3 +11,6 @@ done
 python grid_search.py --datadir ${datadir} --dataset ${dataset} --y train_loss --graph grid
 python grid_search.py --datadir ${datadir} --dataset ${dataset} --y test_loss --graph grid
 python grid_search.py --datadir ${datadir} --dataset ${dataset} --y test_acc --graph grid
+python grid_search.py --datadir ${datadir} --dataset ${dataset} --y train_loss --graph heatmap
+python grid_search.py --datadir ${datadir} --dataset ${dataset} --y test_loss --graph heatmap
+python grid_search.py --datadir ${datadir} --dataset ${dataset} --y test_acc --graph heatmap

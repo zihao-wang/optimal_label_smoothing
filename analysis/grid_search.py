@@ -131,7 +131,7 @@ if (args.graph == "heatmap"):
     data = []
     for a in reversed(a_grid):
         data.append([get_data(p, a)[args.y][epoch - 1] for p in p_grid])
-    plt.imshow(data, cmap='viridis', extent=[0.15, 1.0, 0.15, 1.0], vmin=95, vmax=100)
+    plt.imshow(data, cmap='viridis', extent=[0.15, 1.0, 0.15, 1.0])
     plt.xlabel("p", fontsize=12)
     plt.ylabel("a", fontsize=12)
     plt.colorbar()
