@@ -16,6 +16,9 @@ parser.add_argument(
         '--y', type=str, help='[train_loss, test_acc, test_loss]', default="test_acc")
 
 parser.add_argument(
+        '--a', type=float, help='used in fixed_a graph, for noisy ratio', default=0.2)
+
+parser.add_argument(
         '--dataset', type=str, help='[mnist, cifar10]', default="mnist")
 
 parser.add_argument(
@@ -72,7 +75,7 @@ if (args.graph == "grid-max"):
     plt.clf()
 
 if (args.graph == "fixed_a"):
-    a = 0.2
+    a = args.a
     for p in p_grid:
         data = get_data(p, a)[args.y]
         plt.plot(np.arange(0, len(data), 1), data, label="p={:.2f}".format(p))
